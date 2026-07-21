@@ -1,0 +1,52 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String            @id @default(uuid())
+  name         String
+  email        String            @unique
+  passwordHash String
+  createdAt    DateTime          @default(now())
+  sessions     AnalysisSession[]
+}
+
+model AnalysisSession {
+  id           String         @id @default(uuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  meetingNotes String         @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  analyses     AIAnalysis[]
+  exports      ExportRecord[]
+}
+
+model AIAnalysis {
+  id                     String          @id @default(uuid())
+  sessionId              String
+  session                AnalysisSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  executiveSummary       String          @db.Text
+  functionalRequirements Json
+  userStories            Json
+  acceptanceCriteria     Json?
+  risks                  Json
+  assumptions            Json
+  clarifyingQuestions    Json
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+}
+
+model ExportRecord {
+  id         String          @id @default(uuid())
+  sessionId  String
+  session    AnalysisSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exportType String
+  exportedAt DateTime        @default(now())
+}
